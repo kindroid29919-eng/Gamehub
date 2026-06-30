@@ -86,6 +86,30 @@ html, body, [class*="css"] {
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+
+/* page_link styling */
+div[data-testid="stPageLink"] {
+    margin-top: 0.8rem;
+}
+div[data-testid="stPageLink"] a {
+    background: #1f1f1f !important;
+    border: 1px solid #333 !important;
+    border-radius: 10px !important;
+    color: #f0f0f0 !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    padding: 0.6rem !important;
+    transition: all 0.15s ease !important;
+    justify-content: center !important;
+}
+div[data-testid="stPageLink"] a:hover {
+    background: #2a2a2a !important;
+    border-color: #555 !important;
+}
+div[data-testid="stPageLink"] a p {
+    color: #f0f0f0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -98,20 +122,27 @@ st.markdown("""
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
+st.markdown('<div class="game-card">', unsafe_allow_html=True)
 st.markdown("""
-<div class="game-card">
+<div style="text-align:center;">
     <div class="emoji">✊🖐️✌️</div>
     <div class="name">Rock Paper Scissors</div>
     <div class="desc">Classic hand game against the computer</div>
 </div>
-<div class="game-card">
+""", unsafe_allow_html=True)
+st.page_link("pages/1_Rock_Paper_Scissors.py", label="▶ Play Rock Paper Scissors", use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="game-card">', unsafe_allow_html=True)
+st.markdown("""
+<div style="text-align:center;">
     <div class="emoji">🔢</div>
     <div class="name">Guess the Number</div>
     <div class="desc">Can you guess the number between 1-100?</div>
 </div>
 """, unsafe_allow_html=True)
-
-st.info("👈 Use the sidebar on the left to switch between games")
+st.page_link("pages/2_Guess_the_Number.py", label="▶ Play Guess the Number", use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("""
 <div class="credits-card">

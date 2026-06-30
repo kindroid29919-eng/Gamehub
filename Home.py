@@ -33,9 +33,10 @@ html, body, [class*="css"] {
 .game-card {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 16px;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
     padding: 1.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     text-align: center;
     transition: all 0.15s ease;
 }
@@ -89,17 +90,18 @@ html, body, [class*="css"] {
 
 /* page_link styling */
 div[data-testid="stPageLink"] {
-    margin-top: 0.8rem;
+    margin-top: 0;
+    margin-bottom: 1.2rem;
 }
 div[data-testid="stPageLink"] a {
     background: #1f1f1f !important;
-    border: 1px solid #333 !important;
-    border-radius: 10px !important;
+    border: 1px solid #222 !important;
+    border-radius: 0 0 16px 16px !important;
     color: #f0f0f0 !important;
     font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.85rem !important;
-    padding: 0.6rem !important;
+    padding: 0.8rem !important;
     transition: all 0.15s ease !important;
     justify-content: center !important;
 }
@@ -122,27 +124,23 @@ st.markdown("""
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-st.markdown('<div class="game-card">', unsafe_allow_html=True)
 st.markdown("""
-<div style="text-align:center;">
+<div class="game-card">
     <div class="emoji">✊🖐️✌️</div>
     <div class="name">Rock Paper Scissors</div>
     <div class="desc">Classic hand game against the computer</div>
 </div>
 """, unsafe_allow_html=True)
 st.page_link("pages/1_Rock_Paper_Scissors.py", label="▶ Play Rock Paper Scissors", use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="game-card">', unsafe_allow_html=True)
 st.markdown("""
-<div style="text-align:center;">
+<div class="game-card">
     <div class="emoji">🔢</div>
     <div class="name">Guess the Number</div>
     <div class="desc">Can you guess the number between 1-100?</div>
 </div>
 """, unsafe_allow_html=True)
 st.page_link("pages/2_Guess_the_Number.py", label="▶ Play Guess the Number", use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("""
 <div class="credits-card">

@@ -107,6 +107,13 @@ div[data-testid="column"] { padding: 0 0.25rem !important; }
     }
 }
 
+
+/* Global mobile columns override */
+div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important;flex-direction:row !important;gap:0.4rem !important;}
+div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0 !important;width:auto !important;flex:1 1 0 !important;}
+div[data-testid="stHorizontalBlock"] button{padding:0.45rem 0.2rem !important;font-size:0.9rem !important;white-space:nowrap !important;}
+@media(max-width:360px){div[data-testid="stHorizontalBlock"]{flex-wrap:wrap !important;}}
+
 div[data-testid="stButton"] > button {
     background: #14141c !important; color: #f0f0f0 !important;
     border: 1.5px solid #26262f !important; border-radius: 14px !important;

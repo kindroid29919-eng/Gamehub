@@ -123,7 +123,7 @@ def format_score(score, wickets_lost, balls_bowled, total_overs):
 # ── Session state ─────────────────────────────────────────────────────────────
 def init_state():
     defaults = {
-        "phase": "setup",          # setup | toss | innings1 | innings_break | innings2 | result
+        "phase": "setup",          # setup | toss | innings1 | innings2 | result
         "player_name": "Player",
         "total_wickets": 3,
         "total_overs": 2,
@@ -278,7 +278,7 @@ def end_innings():
         s.balls_bowled  = 0
         s.batter_history  = []
         s.bowler_history  = []
-        s.phase = "innings_break"
+        s.phase = "innings2"
     else:
         # decide result
         second_batter = "CricBot" if s.first_batter == "player" else "player"
@@ -361,17 +361,7 @@ elif s.phase == "toss_choice":
             s.first_batter = "CricBot"; s.phase = "innings1"; st.rerun()
 
 # ── INNINGS 1 & 2 ─────────────────────────────────────────────────────────────
-
-elif s.phase=="innings_break":
-    role = "Batting" if who_is_batting()=="player" else "Bowling"
-    st.markdown(f"<div class='banner banner-runs'>🏁 Innings 1 Complete!</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='banner banner-info'>Target: {s.target}<br>You are now <b>{role}</b>.</div>", unsafe_allow_html=True)
-    if st.button("▶ Start 2nd Innings", use_container_width=True):
-        s.phase="innings2"
-        st.rerun()
-
 elif s.phase in ("innings1", "innings2"):
-
     batter = who_is_batting()
     bowler = who_is_bowling()
     inn_num = current_innings()
@@ -425,14 +415,19 @@ elif s.phase in ("innings1", "innings2"):
         # ── TYPE YOUR NUMBER ──────────────────────────────────────────────────
         label = "Your batting shot" if batter == "player" else "Your bowling number"
         st.markdown(f"<p style='text-align:center;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;'>{label}</p>", unsafe_allow_html=True)
-        layout=[[1,2,3],[4,5,6],[0]]
-        for row in layout:
-            cols=st.columns(3)
-            for i,n in enumerate(row):
-                with cols[i]:
+        rows=[[1,2,3],[4,5,6]]
+        for r,row in enumerate(rows):
+            cols=st.columns(3,gap="small")
+            for c,n in enumerate(row):
+                with cols[c]:
                     if st.button(str(n), key=f"num_{s.balls_bowled}_{n}", use_container_width=True):
-                        process_ball(n)
-                        st.rerun()
+                        process_ball(n); st.rerun()
+        left,mid,right=st.columns([1,2,1])
+        with mid:
+            if st.button("0", key=f"num_{s.balls_bowled}_0", use_container_width=True):
+                process_ball(0); st.rerun()
+
+            st.markdown("<p class='input-error'>⚠️ Please enter a valid number between 0 and 6.</p>", unsafe_allow_html=True)
 
 # ── RESULT ────────────────────────────────────────────────────────────────────
 elif s.phase == "result":

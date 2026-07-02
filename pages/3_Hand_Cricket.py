@@ -123,7 +123,7 @@ def format_score(score, wickets_lost, balls_bowled, total_overs):
 # ── Session state ─────────────────────────────────────────────────────────────
 def init_state():
     defaults = {
-        "phase": "setup",          # setup | toss | innings1 | innings2 | result
+        "phase": "setup",          # setup | toss | innings1 | innings_break | innings2 | result
         "player_name": "Player",
         "total_wickets": 3,
         "total_overs": 2,
@@ -278,7 +278,7 @@ def end_innings():
         s.balls_bowled  = 0
         s.batter_history  = []
         s.bowler_history  = []
-        s.phase = "innings2"
+        s.phase = "innings_break"
     else:
         # decide result
         second_batter = "CricBot" if s.first_batter == "player" else "player"
@@ -361,7 +361,17 @@ elif s.phase == "toss_choice":
             s.first_batter = "CricBot"; s.phase = "innings1"; st.rerun()
 
 # ── INNINGS 1 & 2 ─────────────────────────────────────────────────────────────
+
+elif s.phase=="innings_break":
+    role = "Batting" if who_is_batting()=="player" else "Bowling"
+    st.markdown(f"<div class='banner banner-runs'>🏁 Innings 1 Complete!</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='banner banner-info'>Target: {s.target}<br>You are now <b>{role}</b>.</div>", unsafe_allow_html=True)
+    if st.button("▶ Start 2nd Innings", use_container_width=True):
+        s.phase="innings2"
+        st.rerun()
+
 elif s.phase in ("innings1", "innings2"):
+
     batter = who_is_batting()
     bowler = who_is_bowling()
     inn_num = current_innings()
@@ -415,20 +425,14 @@ elif s.phase in ("innings1", "innings2"):
         # ── TYPE YOUR NUMBER ──────────────────────────────────────────────────
         label = "Your batting shot" if batter == "player" else "Your bowling number"
         st.markdown(f"<p style='text-align:center;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;'>{label}</p>", unsafe_allow_html=True)
-        with st.form(key=f"ball_form_{s.balls_bowled}", clear_on_submit=True):
-            user_val = st.text_input("Enter a number (0-6)", key="ball_num_input",
-                                      label_visibility="collapsed", placeholder="Type 0-6, then press Submit")
-            submitted = st.form_submit_button("Submit ▶", use_container_width=True)
-        if submitted:
-            val = user_val.strip()
-            if val.isdigit() and 0 <= int(val) <= 6:
-                s.input_error = False
-                process_ball(int(val))
-                st.rerun()
-            else:
-                s.input_error = True
-        if s.input_error:
-            st.markdown("<p class='input-error'>⚠️ Please enter a valid number between 0 and 6.</p>", unsafe_allow_html=True)
+        layout=[[1,2,3],[4,5,6],[0]]
+        for row in layout:
+            cols=st.columns(3)
+            for i,n in enumerate(row):
+                with cols[i]:
+                    if st.button(str(n), key=f"num_{s.balls_bowled}_{n}", use_container_width=True):
+                        process_ball(n)
+                        st.rerun()
 
 # ── RESULT ────────────────────────────────────────────────────────────────────
 elif s.phase == "result":

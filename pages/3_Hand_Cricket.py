@@ -58,6 +58,7 @@ div[data-testid="column"] { padding: 0 0.25rem !important; }
 .lb-info { display:flex; flex-direction:column; }
 .lb-label { font-size: 0.6rem; text-transform:uppercase; letter-spacing:0.08em; color:#6b6b78; }
 .lb-text { font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.95rem; color:#e8e8ee; margin-top:1px; }
+.lb-vs { font-family:'Space Mono', monospace; font-size:0.68rem; color:#7a7a86; margin-top:2px; }
 .lb-right { text-align:right; }
 .lb-right .lb-label { text-align:right; }
 .lb-right .tr-val { font-family:'Space Mono', monospace; font-size:1.35rem; font-weight:700; color:#4ade80; }
@@ -76,6 +77,35 @@ div[data-testid="column"] { padding: 0 0.25rem !important; }
 /* ── shot pad ─────────────────────────────────────────────────────────── */
 .pad-label { text-align:center; color:#e8e8ee; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin: 0.6rem 0 0.05rem 0; }
 .pad-sub { text-align:center; color:#6b6b78; font-size: 0.72rem; margin: 0 0 0.5rem 0; }
+
+/* ── force the shot-pad rows to stay horizontal on mobile ──────────────
+   Streamlit auto-stacks st.columns() vertically below a width breakpoint.
+   These overrides pin flex-direction/wrap so 1-2-3 / 4-5-6 always render
+   as a real row instead of one button per line. */
+.st-key-pad_top div[data-testid="stHorizontalBlock"],
+.st-key-pad_bottom div[data-testid="stHorizontalBlock"] {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
+}
+.st-key-pad_top div[data-testid="column"],
+.st-key-pad_bottom div[data-testid="column"] {
+    width: auto !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+}
+@media (max-width: 640px) {
+    .st-key-pad_top div[data-testid="stHorizontalBlock"],
+    .st-key-pad_bottom div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    .st-key-pad_top div[data-testid="column"],
+    .st-key-pad_bottom div[data-testid="column"] {
+        width: auto !important;
+        flex: 1 1 0 !important;
+    }
+}
 
 div[data-testid="stButton"] > button {
     background: #14141c !important; color: #f0f0f0 !important;
@@ -217,6 +247,8 @@ def init_state():
         "last_event": None,
         "last_msg": "",
         "last_display": "-",
+        "last_you_num": None,
+        "last_bot_num": None,
         "result_msg": "",
         "toss_result": None,
         "pending_wicket": None,
@@ -276,6 +308,11 @@ def process_ball(player_num):
     s.stats[batter]["balls"] += 1
     s.stats[bowler]["balls_bowled"] += 1
 
+    # remember what YOU picked vs what CricBot picked this ball, regardless
+    # of whether you were batting or bowling — used to show both sides.
+    s.last_you_num = player_num
+    s.last_bot_num = bowler_num if batter == "player" else batter_num
+
     if batter_num == bowler_num:
         dtype = determine_dismissal_type(batter_num, s.batter_history)
         if dtype in ('catch_chance', 'runout_chance', 'stumped_chance'):
@@ -327,6 +364,8 @@ def resolve_wicket_chance(player_choice):
     bot_choice = random.choice(s.wicket_options)
     batter, bowler = pw["batter"], pw["bowler"]
     batter_num, bowler_num = pw["batter_num"], pw["bowler_num"]
+    s.last_you_num = pw["bowler_num"] if bowler == "player" else pw["batter_num"]
+    s.last_bot_num = pw["bowler_num"] if bowler != "player" else pw["batter_num"]
     kind_map = {"catch_chance": "caught", "runout_chance": "run_out", "stumped_chance": "stumped"}
     verb_map = {"catch_chance": "Caught", "runout_chance": "Run Out", "stumped_chance": "Stumped"}
     dtype = kind_map[pw["kind"]]
@@ -373,7 +412,12 @@ def end_innings():
         s.batter_history  = []
         s.bowler_history  = []
         s.ball_log      = []
-        s.phase = "innings2"
+        s.last_msg      = ""
+        s.last_event    = None
+        s.last_display  = "-"
+        s.last_you_num  = None
+        s.last_bot_num  = None
+        s.phase = "innings_break"
     else:
         # decide result
         second_batter = "CricBot" if s.first_batter == "player" else "player"
@@ -397,17 +441,11 @@ def ball_chip_html(entry):
 # ══════════════════════════════════════════════════════════════════════════════
 # UI
 # ══════════════════════════════════════════════════════════════════════════════
-h1, h2 = st.columns([5, 1])
-with h1:
-    st.markdown("""
-    <div class="titles">
-        <h2>🏏 Hand Cricket</h2>
-        <p>Play against AI</p>
-    </div>""", unsafe_allow_html=True)
-with h2:
-    st.write("")
-    if st.button("🔄", key="header_refresh", use_container_width=True):
-        st.rerun()
+st.markdown("""
+<div class="titles" style="text-align:center;">
+    <h2>🏏 Hand Cricket</h2>
+    <p>Play against AI</p>
+</div>""", unsafe_allow_html=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # ── SETUP ─────────────────────────────────────────────────────────────────────
@@ -465,6 +503,23 @@ elif s.phase == "toss_choice":
     with c2:
         if st.button("🎳 Bowl First", use_container_width=True):
             s.first_batter = "CricBot"; s.phase = "innings1"; st.rerun()
+
+# ── INNINGS BREAK ─────────────────────────────────────────────────────────────
+elif s.phase == "innings_break":
+    chaser = "You" if who_is_batting() == "player" else "CricBot"
+    first_batter_name = "You" if s.first_batter == "player" else "CricBot"
+    st.markdown(f"<div class='banner banner-info'>🏁 Innings 1 Complete</div>", unsafe_allow_html=True)
+    st.markdown('<hr class="divider-tight">', unsafe_allow_html=True)
+    st.markdown(f"""<div class='stat-row'>
+        <div class='stat-box'><div class='sl'>{first_batter_name} Scored</div><div class='sv' style='color:#4ade80'>{s.innings1_score}/{s.innings1_wickets}</div></div>
+        <div class='stat-box'><div class='sl'>Overs</div><div class='sv'>{s.innings1_balls//6}.{s.innings1_balls%6}</div></div>
+    </div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class='banner banner-info' style='font-size:0.85rem;'>
+        {chaser} need <span style='color:#facc15'>{s.target}</span> runs in {s.total_overs} overs to win
+    </div>""", unsafe_allow_html=True)
+    if st.button("▶ Start Innings 2", use_container_width=True):
+        s.phase = "innings2"
+        st.rerun()
 
 # ── INNINGS 1 & 2 ─────────────────────────────────────────────────────────────
 elif s.phase in ("innings1", "innings2"):
@@ -527,12 +582,15 @@ elif s.phase in ("innings1", "innings2"):
             lb_text = f"{s.last_display} RUN{'S' if s.last_display != '1' else ''}"
         else:
             lb_text = ""
+        vs_line = (f"You {s.last_you_num} · Bot {s.last_bot_num}"
+                   if s.last_you_num is not None and s.last_bot_num is not None else "")
         st.markdown(f"""<div class='lastball-box'>
             <div class='lb-left'>
                 <div class='lb-pill {pill_cls}'>{s.last_display}</div>
                 <div class='lb-info'>
                     <div class='lb-label'>Last Ball</div>
                     <div class='lb-text'>{lb_text}</div>
+                    <div class='lb-vs'>{vs_line}</div>
                 </div>
             </div>
             <div class='lb-right'>

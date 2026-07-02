@@ -11,17 +11,17 @@ html, body, [class*="css"] { font-family: 'Space Grotesk', sans-serif; backgroun
 .stApp { background: #0d0d0d; }
 [data-testid="stSidebar"] { background: #111; border-right: 1px solid #1e1e1e; }
 
-.page-title { text-align: center; padding: 1rem 0 0.5rem 0; }
-.page-title h2 { font-family: 'Space Mono', monospace; font-size: 1.3rem; color: #fff; margin: 0; letter-spacing: -0.02em; }
-.page-title p { font-size: 0.75rem; color: #444; margin: 0.2rem 0 0 0; }
-.divider { border: none; border-top: 1px solid #1e1e1e; margin: 0.9rem 0; }
+.page-title { text-align: center; padding: 0.4rem 0 0.15rem 0; }
+.page-title h2 { font-family: 'Space Mono', monospace; font-size: 1.1rem; color: #fff; margin: 0; letter-spacing: -0.02em; }
+.page-title p { font-size: 0.7rem; color: #444; margin: 0.1rem 0 0 0; }
+.divider { border: none; border-top: 1px solid #1e1e1e; margin: 0.5rem 0; }
 
-.scoreboard { background: #161616; border: 1px solid #222; border-radius: 14px; padding: 1rem; text-align: center; margin: 0.5rem 0; }
-.scoreboard .big { font-family: 'Space Mono', monospace; font-size: 2.2rem; font-weight: 700; color: #fff; line-height: 1; }
-.scoreboard .small { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555; margin-top: 0.2rem; }
-.scoreboard .detail { font-size: 0.85rem; color: #888; margin-top: 0.3rem; }
+.scoreboard { background: #161616; border: 1px solid #222; border-radius: 14px; padding: 0.6rem; text-align: center; margin: 0.3rem 0; }
+.scoreboard .big { font-family: 'Space Mono', monospace; font-size: 1.7rem; font-weight: 700; color: #fff; line-height: 1; }
+.scoreboard .small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555; margin-top: 0.15rem; }
+.scoreboard .detail { font-size: 0.75rem; color: #888; margin-top: 0.2rem; }
 
-.banner { text-align: center; padding: 0.9rem; border-radius: 12px; margin: 0.8rem 0; font-family: 'Space Mono', monospace; font-size: 1rem; font-weight: 700; }
+.banner { text-align: center; padding: 0.55rem; border-radius: 12px; margin: 0.45rem 0; font-family: 'Space Mono', monospace; font-size: 0.9rem; font-weight: 700; }
 .banner-out    { background: #450a0a; color: #f87171; border: 1px solid #f87171; }
 .banner-runs   { background: #14532d; color: #4ade80; border: 1px solid #4ade80; }
 .banner-dot    { background: #1e1b4b; color: #818cf8; border: 1px solid #818cf8; }
@@ -30,8 +30,8 @@ html, body, [class*="css"] { font-family: 'Space Grotesk', sans-serif; backgroun
 .banner-lose   { background: #450a0a; color: #f87171; border: 1px solid #f87171; font-size: 1.2rem; }
 .banner-tie    { background: #422006; color: #facc15; border: 1px solid #facc15; font-size: 1.2rem; }
 
-.stat-row { display: flex; gap: 0.6rem; margin: 0.5rem 0; }
-.stat-box { background: #161616; border: 1px solid #222; border-radius: 10px; padding: 0.5rem 0.7rem; text-align: center; flex: 1; }
+.stat-row { display: flex; gap: 0.5rem; margin: 0.35rem 0; }
+.stat-box { background: #161616; border: 1px solid #222; border-radius: 10px; padding: 0.4rem 0.6rem; text-align: center; flex: 1; }
 .stat-box .sv { font-family: 'Space Mono', monospace; font-size: 1.2rem; font-weight: 700; color: #fff; }
 .stat-box .sl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555; }
 
@@ -47,7 +47,7 @@ div[data-testid="stNumberInput"] input { background: #161616 !important; color: 
 div[data-testid="stTextInput"] input {
     background: #161616 !important; color: #f0f0f0 !important; border: 2px solid #2a2a2a !important;
     border-radius: 10px !important; font-family: 'Space Mono', monospace !important;
-    text-align: center !important; font-size: 1.4rem !important; padding: 0.6rem !important;
+    text-align: center !important; font-size: 1.2rem !important; padding: 0.4rem !important;
 }
 div[data-testid="stTextInput"] input:focus { border-color: #818cf8 !important; box-shadow: none !important; }
 div[data-testid="stFormSubmitButton"] > button {
@@ -64,14 +64,31 @@ div[data-testid="stFormSubmitButton"] > button:hover { border-color: #fff !impor
 </style>
 """, unsafe_allow_html=True)
 
-# ── AI (your original logic) ────────────────────────────────────────────────
+# ── AI (pro logic) ────────────────────────────────────────────────────────────
 ai_patterns = {0:[4,5,6],1:[3,4,6],2:[2,6,5],3:[3,1,5],4:[4,5,1],5:[3,6,5],6:[6,3,4]}
 
-def ai_bowler_choice(batter_history, target=None, score=0, balls_remaining=None):
+def ai_bowler_choice(batter_history, own_history=None, target=None, score=0, balls_remaining=None):
+    """CricBot is bowling. batter_history = the human batter's past numbers.
+    own_history = CricBot's own past bowling numbers (in this innings)."""
+    own_history = own_history or []
     base = 0.85
     if target is not None and balls_remaining and balls_remaining > 0:
         rr = (target - score) / (balls_remaining / 6)
         base = 0.93 if rr >= 5 else (0.8 if rr <= 2 else base)
+
+    # Spam read: the batter played the same number on the last two balls.
+    # A human mashing one number is predictable - bowl that exact number
+    # to punish the repeat instead of guessing randomly.
+    if len(batter_history) >= 2 and batter_history[-1] == batter_history[-2]:
+        if random.random() < 0.8:
+            return batter_history[-1]
+
+    # If the last ball collided (a wicket-taking ball), the same trick just
+    # worked - re-bowl it since the batter may not expect it again.
+    if own_history and batter_history and own_history[-1] == batter_history[-1]:
+        if random.random() < 0.45:
+            return own_history[-1]
+
     if len(batter_history) >= 1 and random.random() < base:
         return random.choice(ai_patterns[batter_history[-1]])
     if len(batter_history) >= 3:
@@ -80,7 +97,11 @@ def ai_bowler_choice(batter_history, target=None, score=0, balls_remaining=None)
         if favs: return random.choice(favs)
     return random.randint(0, 6)
 
-def ai_batter_choice(bowler_history, score, target, balls_remaining, wickets_remaining, total_overs):
+def ai_batter_choice(bowler_history, own_history=None, score=0, target=None,
+                      balls_remaining=0, wickets_remaining=1, total_overs=1):
+    """CricBot is batting. bowler_history = the human bowler's past numbers.
+    own_history = CricBot's own past batting numbers (in this innings)."""
+    own_history = own_history or []
     balls_total = total_overs * 6
     balls_bowled = balls_total - balls_remaining
     if target is None:
@@ -93,6 +114,19 @@ def ai_batter_choice(bowler_history, score, target, balls_remaining, wickets_rem
         if wickets_remaining <= 1 and rr < 5: aggression *= 0.5
     aggression = max(0.0, min(1.0, aggression))
     weights = [max(1.0 + aggression * n * 1.5 - (1 - aggression) * (n * 0.3), 0.05) for n in range(7)]
+
+    # Spam read: the bowler repeated the same number on the last two balls.
+    # A third repeat would collide and get CricBot out, so avoid that
+    # number hard rather than risk it on a random weight.
+    if len(bowler_history) >= 2 and bowler_history[-1] == bowler_history[-2]:
+        weights[bowler_history[-1]] *= 0.1
+
+    # If CricBot's last shot beat the bowler and scored a boundary, repeat
+    # it - it just worked, and the bowler may not counter it twice.
+    if own_history and bowler_history and own_history[-1] != bowler_history[-1] and own_history[-1] >= 4:
+        if random.random() < 0.35:
+            weights[own_history[-1]] *= 1.8
+
     if len(bowler_history) >= 2:
         freq = Counter(bowler_history[-5:])
         avoidance = 0.5 if aggression < 0.8 else 0.2
@@ -102,10 +136,11 @@ def ai_batter_choice(bowler_history, score, target, balls_remaining, wickets_rem
     return random.choices(range(7), weights=[w/total_w for w in weights], k=1)[0]
 
 def determine_dismissal_type(number, batter_history):
-    """Classify a matching-number ball. 'catch_chance' hands control to the
-    interactive catch mini-game instead of resolving the wicket immediately."""
+    """Classify a matching-number ball. Every outcome except 'bowled' hands
+    control to an interactive mini-game (pick a number, match it and it's
+    OUT) instead of resolving the wicket by a hidden coin flip."""
     if random.random() < 0.10:
-        return 'stumped'
+        return 'stump_chance'
     if 4 <= number <= 6:
         recent = batter_history[-5:]
         high_ratio = (sum(1 for n in recent if n in (4,5,6)) / len(recent)) if recent else 0
@@ -113,7 +148,7 @@ def determine_dismissal_type(number, batter_history):
             return 'catch_chance'
         return 'bowled'
     elif 1 <= number <= 3:
-        return 'run_out' if random.random() < 0.8 else 'survived_run_out'
+        return 'runout_chance'
     return 'bowled'
 
 def format_score(score, wickets_lost, balls_bowled, total_overs):
@@ -141,9 +176,10 @@ def init_state():
         "last_event": None,
         "last_msg": "",
         "result_msg": "",
+        "break_msg": "",
         "toss_result": None,
-        "pending_catch": None,
-        "catch_options": None,
+        "pending_dismissal": None,
+        "dismissal_options": None,
         "input_error": False,
         "stats": {"player":{"runs":0,"balls":0,"outs":0,"balls_bowled":0,"runs_conceded":0,"catches":0,"runouts":0,"stumpings":0,"bowled":0},
                   "CricBot":{"runs":0,"balls":0,"outs":0,"balls_bowled":0,"runs_conceded":0,"catches":0,"runouts":0,"stumpings":0,"bowled":0}},
@@ -183,10 +219,12 @@ def process_ball(player_num):
 
     if batter == "player":
         batter_num = player_num
-        bowler_num = ai_bowler_choice(s.batter_history, target=s.target, score=s.score, balls_remaining=balls_remaining())
+        bowler_num = ai_bowler_choice(s.batter_history, own_history=s.bowler_history,
+                                       target=s.target, score=s.score, balls_remaining=balls_remaining())
     else:
         bowler_num = player_num
-        batter_num = ai_batter_choice(s.bowler_history, score=s.score, target=s.target,
+        batter_num = ai_batter_choice(s.bowler_history, own_history=s.batter_history,
+                                       score=s.score, target=s.target,
                                        balls_remaining=balls_remaining(),
                                        wickets_remaining=wickets_remaining(),
                                        total_overs=s.total_overs)
@@ -199,16 +237,21 @@ def process_ball(player_num):
 
     if batter_num == bowler_num:
         dtype = determine_dismissal_type(batter_num, s.batter_history)
-        if dtype == 'catch_chance':
-            # Hold off resolving the wicket until the player plays the catch mini-game
+        if dtype in ('catch_chance', 'runout_chance', 'stump_chance'):
+            # Hold off resolving the wicket until the player plays the mini-game
             options = random.sample(range(0, 7), 3)
-            s.pending_catch = {
-                "batter": batter, "bowler": bowler,
+            s.pending_dismissal = {
+                "type": dtype, "batter": batter, "bowler": bowler,
                 "batter_num": batter_num, "bowler_num": bowler_num,
             }
-            s.catch_options = options
+            s.dismissal_options = options
             s.last_event = "dot"
-            s.last_msg = f"🏐 Big shot! It's up in the air — catch chance! ({batter_num} vs {bowler_num})"
+            hint = {
+                "catch_chance": "🏐 Big shot! It's up in the air — catch chance!",
+                "runout_chance": "🏃 Quick single! Throw's coming in — run-out chance!",
+                "stump_chance": "🧤 Keeper's up! Stumping chance!",
+            }[dtype]
+            s.last_msg = f"{hint} ({batter_num} vs {bowler_num})"
             return  # wait for the mini-game before finishing this ball
         apply_dismissal(batter, bowler, batter_num, bowler_num, dtype)
     else:
@@ -222,38 +265,35 @@ def process_ball(player_num):
     check_innings_over()
 
 def apply_dismissal(batter, bowler, batter_num, bowler_num, dtype):
-    if dtype == 'survived_run_out':
-        s.last_event = "survived"
-        s.last_msg = f"Close! Survived! ({batter_num} vs {bowler_num})"
-        return
+    # Only the instant 'bowled' outcome reaches here now — catch/run-out/
+    # stumping all go through the interactive resolve_dismissal mini-game.
     s.wickets_lost += 1
     s.stats[batter]["outs"] += 1
-    if dtype == "caught":    s.stats[bowler]["catches"] += 1
-    elif dtype == "run_out": s.stats[bowler]["runouts"] += 1
-    elif dtype == "stumped": s.stats[bowler]["stumpings"] += 1
-    else:                    s.stats[bowler]["bowled"] += 1
-    label = {"caught": "Caught", "run_out": "Run Out", "stumped": "Stumped"}.get(dtype, "Bowled")
+    s.stats[bowler]["bowled"] += 1
     s.last_event = "out"
-    s.last_msg = f"OUT! {label}! ({batter_num} vs {bowler_num})"
+    s.last_msg = f"OUT! Bowled! ({batter_num} vs {bowler_num})"
 
-def resolve_catch(player_choice):
-    pc = s.pending_catch
-    if not pc:
+def resolve_dismissal(player_choice):
+    pd = s.pending_dismissal
+    if not pd:
         return
-    bot_choice = random.choice(s.catch_options)
-    batter, bowler = pc["batter"], pc["bowler"]
-    batter_num, bowler_num = pc["batter_num"], pc["bowler_num"]
+    bot_choice = random.choice(s.dismissal_options)
+    dtype = pd["type"]
+    batter, bowler = pd["batter"], pd["bowler"]
+    batter_num, bowler_num = pd["batter_num"], pd["bowler_num"]
+    label = {"catch_chance": "Caught", "runout_chance": "Run Out", "stump_chance": "Stumped"}[dtype]
+    stat_key = {"catch_chance": "catches", "runout_chance": "runouts", "stump_chance": "stumpings"}[dtype]
     if player_choice == bot_choice:
         s.wickets_lost += 1
         s.stats[batter]["outs"] += 1
-        s.stats[bowler]["catches"] += 1
+        s.stats[bowler][stat_key] += 1
         s.last_event = "out"
-        s.last_msg = f"OUT! Caught! You picked {player_choice}, the fielder also picked {bot_choice}! ({batter_num} vs {bowler_num})"
+        s.last_msg = f"OUT! {label}! You picked {player_choice}, fielder also picked {bot_choice}! ({batter_num} vs {bowler_num})"
     else:
         s.last_event = "survived"
-        s.last_msg = f"🙌 Dropped! You picked {player_choice}, fielder picked {bot_choice} — survives, another chance! ({batter_num} vs {bowler_num})"
-    s.pending_catch = None
-    s.catch_options = None
+        s.last_msg = f"🙌 Survived! You picked {player_choice}, fielder picked {bot_choice} — safe for now! ({batter_num} vs {bowler_num})"
+    s.pending_dismissal = None
+    s.dismissal_options = None
     check_innings_over()
 
 def check_innings_over():
@@ -272,13 +312,19 @@ def end_innings():
         s.innings1_balls   = s.balls_bowled
         s.innings1_batter  = s.first_batter
         s.target           = s.score + 1
+        batter_label = s.player_name if s.first_batter == "player" else "CricBot"
+        overs_str = f"{s.balls_bowled//6}.{s.balls_bowled%6}"
+        s.break_msg = (f"🏁 Innings 1 complete! {batter_label} scored {s.score}/{s.wickets_lost} "
+                        f"from {overs_str} overs. Target for Innings 2: {s.target} runs.")
         # reset for innings 2
         s.score         = 0
         s.wickets_lost  = 0
         s.balls_bowled  = 0
         s.batter_history  = []
         s.bowler_history  = []
-        s.phase = "innings2"
+        s.last_event = None
+        s.last_msg = ""
+        s.phase = "innings_break"
     else:
         # decide result
         second_batter = "CricBot" if s.first_batter == "player" else "player"
@@ -360,6 +406,15 @@ elif s.phase == "toss_choice":
         if st.button("🎳 Bowl First", use_container_width=True):
             s.first_batter = "CricBot"; s.phase = "innings1"; st.rerun()
 
+# ── INNINGS BREAK ─────────────────────────────────────────────────────────────
+elif s.phase == "innings_break":
+    st.markdown(f"<div class='banner banner-info'>{s.break_msg}</div>", unsafe_allow_html=True)
+    st.markdown('<hr class="divider">', unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center;color:#888;font-size:0.85rem;'>Innings 2 is about to begin.</p>", unsafe_allow_html=True)
+    if st.button("▶ Start Innings 2", use_container_width=True):
+        s.phase = "innings2"
+        st.rerun()
+
 # ── INNINGS 1 & 2 ─────────────────────────────────────────────────────────────
 elif s.phase in ("innings1", "innings2"):
     batter = who_is_batting()
@@ -402,14 +457,19 @@ elif s.phase in ("innings1", "innings2"):
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-    if s.pending_catch:
-        # ── CATCH MINI-GAME ──────────────────────────────────────────────────
-        st.markdown("<p class='catch-hint'>🏐 Catch chance! Pick a number — match the fielder's pick and it's OUT</p>", unsafe_allow_html=True)
+    if s.pending_dismissal:
+        # ── DISMISSAL MINI-GAME (catch / run-out / stumping) ───────────────────
+        hints = {
+            "catch_chance": "🏐 Catch chance! Pick a number — match the fielder's pick and it's OUT",
+            "runout_chance": "🏃 Run-out chance! Pick a number — match the fielder's throw and it's OUT",
+            "stump_chance": "🧤 Stumping chance! Pick a number — match the keeper's pick and it's OUT",
+        }
+        st.markdown(f"<p class='catch-hint'>{hints[s.pending_dismissal['type']]}</p>", unsafe_allow_html=True)
         cols = st.columns(3)
-        for i, opt in enumerate(s.catch_options):
+        for i, opt in enumerate(s.dismissal_options):
             with cols[i]:
-                if st.button(str(opt), key=f"catch_{s.balls_bowled}_{opt}", use_container_width=True):
-                    resolve_catch(opt)
+                if st.button(str(opt), key=f"dismiss_{s.balls_bowled}_{opt}", use_container_width=True):
+                    resolve_dismissal(opt)
                     st.rerun()
     else:
         # ── TYPE YOUR NUMBER ──────────────────────────────────────────────────

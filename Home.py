@@ -118,7 +118,7 @@ div[data-testid="stPageLink"] a p {
 st.markdown("""
 <div class="page-title">
     <h1>🎮 AhaD's Project Hub</h1>
-    <p>pick a game from the sidebar to play</p>
+    <p>3 games — pick one below or from the sidebar</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -141,6 +141,15 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 st.page_link("pages/2_Guess_the_Number.py", label="▶ Play Guess the Number", use_container_width=True)
+
+st.markdown("""
+<div class="game-card">
+    <div class="emoji">🏏</div>
+    <div class="name">Hand Cricket</div>
+    <div class="desc">Full T20 match vs CricBot — toss, bat, bowl, win!</div>
+</div>
+""", unsafe_allow_html=True)
+st.page_link("pages/3_Hand_Cricket.py", label="▶ Play Hand Cricket", use_container_width=True)
 
 st.markdown("""
 <div class="credits-card">

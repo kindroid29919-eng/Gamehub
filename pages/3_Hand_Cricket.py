@@ -44,6 +44,21 @@ div[data-testid="stButton"] > button {
 div[data-testid="stButton"] > button:hover { border-color: #fff !important; background: #202020 !important; }
 div[data-testid="stSelectbox"] > div { background: #161616 !important; border-color: #2a2a2a !important; color: #f0f0f0 !important; }
 div[data-testid="stNumberInput"] input { background: #161616 !important; color: #f0f0f0 !important; border: 2px solid #2a2a2a !important; border-radius: 10px !important; font-family: 'Space Mono', monospace !important; }
+div[data-testid="stTextInput"] input {
+    background: #161616 !important; color: #f0f0f0 !important; border: 2px solid #2a2a2a !important;
+    border-radius: 10px !important; font-family: 'Space Mono', monospace !important;
+    text-align: center !important; font-size: 1.4rem !important; padding: 0.6rem !important;
+}
+div[data-testid="stTextInput"] input:focus { border-color: #818cf8 !important; box-shadow: none !important; }
+div[data-testid="stFormSubmitButton"] > button {
+    background: #161616 !important; color: #f0f0f0 !important;
+    border: 2px solid #2a2a2a !important; border-radius: 14px !important;
+    font-family: 'Space Grotesk', sans-serif !important; font-weight: 600 !important;
+    padding: 0.7rem 0.5rem !important; transition: all 0.15s ease !important; width: 100% !important;
+}
+div[data-testid="stFormSubmitButton"] > button:hover { border-color: #fff !important; background: #202020 !important; }
+.input-error { color: #f87171; font-size: 0.8rem; text-align: center; margin-top: -0.4rem; margin-bottom: 0.4rem; font-family: 'Space Grotesk', sans-serif; }
+.catch-hint { text-align: center; color: #818cf8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
 
 .footer { text-align: center; margin-top: 1rem; font-size: 0.7rem; color: #333; letter-spacing: 0.06em; }
 </style>
@@ -86,18 +101,20 @@ def ai_batter_choice(bowler_history, score, target, balls_remaining, wickets_rem
     total_w = sum(weights)
     return random.choices(range(7), weights=[w/total_w for w in weights], k=1)[0]
 
-def determine_dismissal(number, batter_history):
+def determine_dismissal_type(number, batter_history):
+    """Classify a matching-number ball. 'catch_chance' hands control to the
+    interactive catch mini-game instead of resolving the wicket immediately."""
     if random.random() < 0.10:
-        return True, 'stumped'
+        return 'stumped'
     if 4 <= number <= 6:
         recent = batter_history[-5:]
         high_ratio = (sum(1 for n in recent if n in (4,5,6)) / len(recent)) if recent else 0
-        if high_ratio >= 0.6 and random.random() < 0.35:
-            return True, 'caught'
-        return True, 'out'
+        if high_ratio >= 0.6 and random.random() < 0.55:
+            return 'catch_chance'
+        return 'bowled'
     elif 1 <= number <= 3:
-        return (True, 'run out') if random.random() < 0.8 else (False, 'survived run out')
-    return True, 'out'
+        return 'run_out' if random.random() < 0.8 else 'survived_run_out'
+    return 'bowled'
 
 def format_score(score, wickets_lost, balls_bowled, total_overs):
     overs = balls_bowled // 6; balls = balls_bowled % 6
@@ -125,6 +142,9 @@ def init_state():
         "last_msg": "",
         "result_msg": "",
         "toss_result": None,
+        "pending_catch": None,
+        "catch_options": None,
+        "input_error": False,
         "stats": {"player":{"runs":0,"balls":0,"outs":0,"balls_bowled":0,"runs_conceded":0,"catches":0,"runouts":0,"stumpings":0,"bowled":0},
                   "CricBot":{"runs":0,"balls":0,"outs":0,"balls_bowled":0,"runs_conceded":0,"catches":0,"runouts":0,"stumpings":0,"bowled":0}},
     }
@@ -178,19 +198,19 @@ def process_ball(player_num):
     s.stats[bowler]["balls_bowled"] += 1
 
     if batter_num == bowler_num:
-        is_out, dismissal = determine_dismissal(batter_num, s.batter_history)
-        if is_out:
-            s.wickets_lost += 1
-            s.stats[batter]["outs"] += 1
-            if dismissal == "caught":    s.stats[bowler]["catches"] += 1
-            elif dismissal == "run out": s.stats[bowler]["runouts"] += 1
-            elif dismissal == "stumped": s.stats[bowler]["stumpings"] += 1
-            else:                        s.stats[bowler]["bowled"] += 1
-            s.last_event = "out"
-            s.last_msg = f"OUT! {'Stumped' if dismissal=='stumped' else 'Caught' if dismissal=='caught' else 'Run Out' if dismissal=='run out' else 'Wicket'}! ({batter_num} vs {bowler_num})"
-        else:
-            s.last_event = "survived"
-            s.last_msg = f"Close! Survived! ({batter_num} vs {bowler_num})"
+        dtype = determine_dismissal_type(batter_num, s.batter_history)
+        if dtype == 'catch_chance':
+            # Hold off resolving the wicket until the player plays the catch mini-game
+            options = random.sample(range(0, 7), 3)
+            s.pending_catch = {
+                "batter": batter, "bowler": bowler,
+                "batter_num": batter_num, "bowler_num": bowler_num,
+            }
+            s.catch_options = options
+            s.last_event = "dot"
+            s.last_msg = f"🏐 Big shot! It's up in the air — catch chance! ({batter_num} vs {bowler_num})"
+            return  # wait for the mini-game before finishing this ball
+        apply_dismissal(batter, bowler, batter_num, bowler_num, dtype)
     else:
         runs = batter_num
         s.score += runs
@@ -199,13 +219,49 @@ def process_ball(player_num):
         s.last_event = "runs"
         s.last_msg = f"+{runs} runs ({batter_num} vs {bowler_num})"
 
-    # check end of innings
+    check_innings_over()
+
+def apply_dismissal(batter, bowler, batter_num, bowler_num, dtype):
+    if dtype == 'survived_run_out':
+        s.last_event = "survived"
+        s.last_msg = f"Close! Survived! ({batter_num} vs {bowler_num})"
+        return
+    s.wickets_lost += 1
+    s.stats[batter]["outs"] += 1
+    if dtype == "caught":    s.stats[bowler]["catches"] += 1
+    elif dtype == "run_out": s.stats[bowler]["runouts"] += 1
+    elif dtype == "stumped": s.stats[bowler]["stumpings"] += 1
+    else:                    s.stats[bowler]["bowled"] += 1
+    label = {"caught": "Caught", "run_out": "Run Out", "stumped": "Stumped"}.get(dtype, "Bowled")
+    s.last_event = "out"
+    s.last_msg = f"OUT! {label}! ({batter_num} vs {bowler_num})"
+
+def resolve_catch(player_choice):
+    pc = s.pending_catch
+    if not pc:
+        return
+    bot_choice = random.choice(s.catch_options)
+    batter, bowler = pc["batter"], pc["bowler"]
+    batter_num, bowler_num = pc["batter_num"], pc["bowler_num"]
+    if player_choice == bot_choice:
+        s.wickets_lost += 1
+        s.stats[batter]["outs"] += 1
+        s.stats[bowler]["catches"] += 1
+        s.last_event = "out"
+        s.last_msg = f"OUT! Caught! You picked {player_choice}, the fielder also picked {bot_choice}! ({batter_num} vs {bowler_num})"
+    else:
+        s.last_event = "survived"
+        s.last_msg = f"🙌 Dropped! You picked {player_choice}, fielder picked {bot_choice} — survives, another chance! ({batter_num} vs {bowler_num})"
+    s.pending_catch = None
+    s.catch_options = None
+    check_innings_over()
+
+def check_innings_over():
     innings_over = False
     if s.target is not None and s.score >= s.target:
         innings_over = True
     elif s.wickets_lost >= s.total_wickets or s.balls_bowled >= s.total_overs * 6:
         innings_over = True
-
     if innings_over:
         end_innings()
 
@@ -338,29 +394,41 @@ elif s.phase in ("innings1", "innings2"):
 
     # last event banner
     if s.last_msg:
-        css = {"out":"banner-out","runs":"banner-runs","survived":"banner-dot"}.get(s.last_event, "banner-info")
+        css = {"out":"banner-out","runs":"banner-runs","survived":"banner-dot","dot":"banner-dot"}.get(s.last_event, "banner-info")
         st.markdown(f"<div class='banner {css}'>{s.last_msg}</div>", unsafe_allow_html=True)
     else:
         role = "batting" if batter == "player" else "bowling"
-        st.markdown(f"<div class='banner banner-info'>You are {role} — pick a number 0–6</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='banner banner-info'>You are {role} — enter a number 0–6</div>", unsafe_allow_html=True)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-    # number pad 0-6
-    if batter == "player":
-        st.markdown("<p style='text-align:center;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;'>Your batting shot</p>", unsafe_allow_html=True)
+    if s.pending_catch:
+        # ── CATCH MINI-GAME ──────────────────────────────────────────────────
+        st.markdown("<p class='catch-hint'>🏐 Catch chance! Pick a number — match the fielder's pick and it's OUT</p>", unsafe_allow_html=True)
+        cols = st.columns(3)
+        for i, opt in enumerate(s.catch_options):
+            with cols[i]:
+                if st.button(str(opt), key=f"catch_{s.balls_bowled}_{opt}", use_container_width=True):
+                    resolve_catch(opt)
+                    st.rerun()
     else:
-        st.markdown("<p style='text-align:center;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;'>Your bowling number</p>", unsafe_allow_html=True)
-
-    row1 = st.columns(4)
-    row2 = st.columns(4)
-    nums = [0,1,2,3,4,5,6]
-    for i, n in enumerate(nums):
-        col = row1[i] if i < 4 else row2[i-4]
-        with col:
-            if st.button(str(n), key=f"num_{n}", use_container_width=True):
-                process_ball(n)
+        # ── TYPE YOUR NUMBER ──────────────────────────────────────────────────
+        label = "Your batting shot" if batter == "player" else "Your bowling number"
+        st.markdown(f"<p style='text-align:center;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;'>{label}</p>", unsafe_allow_html=True)
+        with st.form(key=f"ball_form_{s.balls_bowled}", clear_on_submit=True):
+            user_val = st.text_input("Enter a number (0-6)", key="ball_num_input",
+                                      label_visibility="collapsed", placeholder="Type 0-6, then press Submit")
+            submitted = st.form_submit_button("Submit ▶", use_container_width=True)
+        if submitted:
+            val = user_val.strip()
+            if val.isdigit() and 0 <= int(val) <= 6:
+                s.input_error = False
+                process_ball(int(val))
                 st.rerun()
+            else:
+                s.input_error = True
+        if s.input_error:
+            st.markdown("<p class='input-error'>⚠️ Please enter a valid number between 0 and 6.</p>", unsafe_allow_html=True)
 
 # ── RESULT ────────────────────────────────────────────────────────────────────
 elif s.phase == "result":

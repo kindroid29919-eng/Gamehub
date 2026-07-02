@@ -7,19 +7,60 @@ st.set_page_config(page_title="Hand Cricket", page_icon="🏏", layout="centered
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
-html, body, [class*="css"] { font-family: 'Space Grotesk', sans-serif; background-color: #0d0d0d; color: #f0f0f0; }
-.stApp { background: #0d0d0d; }
+html, body, [class*="css"] { font-family: 'Space Grotesk', sans-serif; background-color: #08080c; color: #f0f0f0; }
+.stApp { background: radial-gradient(circle at 50% 0%, #10101a 0%, #08080c 55%); }
 [data-testid="stSidebar"] { background: #111; border-right: 1px solid #1e1e1e; }
 
-.page-title { text-align: center; padding: 1rem 0 0.5rem 0; }
-.page-title h2 { font-family: 'Space Mono', monospace; font-size: 1.3rem; color: #fff; margin: 0; letter-spacing: -0.02em; }
-.page-title p { font-size: 0.75rem; color: #444; margin: 0.2rem 0 0 0; }
-.divider { border: none; border-top: 1px solid #1e1e1e; margin: 0.9rem 0; }
+/* tighten Streamlit's own vertical rhythm so more fits on one screen */
+div.block-container { padding-top: 0.6rem !important; padding-bottom: 1rem !important; max-width: 640px; }
+div[data-testid="stVerticalBlock"] { gap: 0.4rem !important; }
+div[data-testid="column"] { padding: 0 0.2rem !important; }
 
-.scoreboard { background: #161616; border: 1px solid #222; border-radius: 14px; padding: 1rem; text-align: center; margin: 0.5rem 0; }
-.scoreboard .big { font-family: 'Space Mono', monospace; font-size: 2.2rem; font-weight: 700; color: #fff; line-height: 1; }
-.scoreboard .small { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555; margin-top: 0.2rem; }
-.scoreboard .detail { font-size: 0.85rem; color: #888; margin-top: 0.3rem; }
+.page-title { display:flex; align-items:center; justify-content:space-between; padding: 0.1rem 0 0.4rem 0; }
+.page-title h2 { font-family: 'Space Mono', monospace; font-size: 1.15rem; color: #fff; margin: 0; letter-spacing: -0.02em; }
+.page-title p { font-size: 0.68rem; color: #4a4a55; margin: 0.1rem 0 0 0; }
+.divider { border: none; border-top: 1px solid #1a1a22; margin: 0.5rem 0; }
+.divider-tight { border: none; border-top: 1px solid #1a1a22; margin: 0.3rem 0; }
+
+/* ── compact scoreboard card ─────────────────────────────────────────── */
+.score-card {
+    background: linear-gradient(180deg, #14141d 0%, #101018 100%);
+    border: 1px solid #23232f; border-radius: 16px;
+    padding: 0.7rem 0.9rem 0.55rem 0.9rem; margin: 0.3rem 0;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 8px 24px -12px rgba(0,0,0,0.6);
+}
+.score-main { display: flex; align-items: center; justify-content: space-between; }
+.team { flex: 1; text-align: center; }
+.team-tag { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.team.you .team-tag { color: #34d399; }
+.team.ai .team-tag { color: #60a5fa; }
+.team-score { font-family: 'Space Mono', monospace; font-size: 1.8rem; font-weight: 700; color: #fff; line-height: 1.15; }
+.team-sub { font-size: 0.66rem; color: #6b6b78; margin-top: -1px; }
+.vs-pill {
+    font-family: 'Space Mono', monospace; font-size: 0.62rem; font-weight: 700; color: #55555f;
+    background: #1a1a24; border: 1px solid #26262f; border-radius: 999px;
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin: 0 0.4rem;
+}
+.score-strip { display: flex; gap: 0.4rem; margin-top: 0.6rem; }
+.chip { flex: 1; background: #0d0d13; border: 1px solid #1e1e28; border-radius: 10px; padding: 0.32rem 0.2rem; text-align: center; }
+.chip .cv { display:block; font-family: 'Space Mono', monospace; font-size: 0.92rem; font-weight: 700; color: #fff; line-height: 1.2; }
+.chip .cl { display:block; font-size: 0.55rem; letter-spacing: 0.06em; text-transform: uppercase; color: #55555f; margin-top: 1px; }
+.chip.hl .cv { color: #fbbf24; }
+
+/* ── slim ball-event strip (replaces the tall banner during play) ──────── */
+.ball-strip { display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0 0.25rem 0; padding: 0.35rem 0.6rem;
+    background: #0d0d13; border: 1px solid #1e1e28; border-radius: 10px; }
+.ball-pill { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.85rem; border-radius: 7px;
+    padding: 0.12rem 0.5rem; flex-shrink: 0; }
+.ball-pill.out    { background: #2a0d0d; color: #f87171; border: 1px solid #f87171; }
+.ball-pill.runs   { background: #0d2418; color: #4ade80; border: 1px solid #4ade80; }
+.ball-pill.dot    { background: #17172a; color: #a78bfa; border: 1px solid #a78bfa; }
+.ball-pill.info   { background: #17171e; color: #7a7a86; border: 1px solid #26262f; }
+.ball-text { font-size: 0.78rem; color: #c9c9d2; line-height: 1.2; }
+.recent-strip { margin-left: auto; display:flex; gap: 0.22rem; flex-shrink: 0; }
+.recent-dot { font-family: 'Space Mono', monospace; font-size: 0.62rem; font-weight: 700; color: #cfcfd8;
+    background: #1a1a24; border: 1px solid #26262f; border-radius: 5px; width: 17px; height: 17px;
+    display:flex; align-items:center; justify-content:center; }
 
 .banner { text-align: center; padding: 0.9rem; border-radius: 12px; margin: 0.8rem 0; font-family: 'Space Mono', monospace; font-size: 1rem; font-weight: 700; }
 .banner-out    { background: #450a0a; color: #f87171; border: 1px solid #f87171; }
@@ -35,13 +76,24 @@ html, body, [class*="css"] { font-family: 'Space Grotesk', sans-serif; backgroun
 .stat-box .sv { font-family: 'Space Mono', monospace; font-size: 1.2rem; font-weight: 700; color: #fff; }
 .stat-box .sl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555; }
 
+/* ── shot pad ─────────────────────────────────────────────────────────── */
+.pad-label { text-align:center; color:#55555f; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; margin: 0.35rem 0 0.35rem 0; }
+
 div[data-testid="stButton"] > button {
-    background: #161616 !important; color: #f0f0f0 !important;
-    border: 2px solid #2a2a2a !important; border-radius: 14px !important;
-    font-family: 'Space Grotesk', sans-serif !important; font-weight: 600 !important;
-    padding: 0.7rem 0.5rem !important; transition: all 0.15s ease !important; width: 100% !important;
+    background: #14141c !important; color: #f0f0f0 !important;
+    border: 1.5px solid #26262f !important; border-radius: 14px !important;
+    font-family: 'Space Mono', monospace !important; font-weight: 700 !important; font-size: 1.15rem !important;
+    padding: 0.65rem 0.5rem !important; transition: all 0.12s ease !important; width: 100% !important;
 }
-div[data-testid="stButton"] > button:hover { border-color: #fff !important; background: #202020 !important; }
+div[data-testid="stButton"] > button:hover { border-color: #4ade80 !important; background: #182018 !important; color: #4ade80 !important; }
+div[data-testid="stButton"] > button:active { transform: scale(0.96); }
+/* smaller, muted style for the bottom control row */
+.controls-row div[data-testid="stButton"] > button {
+    font-family: 'Space Grotesk', sans-serif !important; font-weight: 600 !important; font-size: 0.78rem !important;
+    padding: 0.45rem 0.3rem !important; color: #9a9aa5 !important; border-color: #1e1e28 !important;
+}
+.controls-row div[data-testid="stButton"] > button:hover { color: #fff !important; border-color: #3a3a48 !important; background: #16161e !important; }
+
 div[data-testid="stSelectbox"] > div { background: #161616 !important; border-color: #2a2a2a !important; color: #f0f0f0 !important; }
 div[data-testid="stNumberInput"] input { background: #161616 !important; color: #f0f0f0 !important; border: 2px solid #2a2a2a !important; border-radius: 10px !important; font-family: 'Space Mono', monospace !important; }
 div[data-testid="stTextInput"] input {
@@ -58,9 +110,9 @@ div[data-testid="stFormSubmitButton"] > button {
 }
 div[data-testid="stFormSubmitButton"] > button:hover { border-color: #fff !important; background: #202020 !important; }
 .input-error { color: #f87171; font-size: 0.8rem; text-align: center; margin-top: -0.4rem; margin-bottom: 0.4rem; font-family: 'Space Grotesk', sans-serif; }
-.catch-hint { text-align: center; color: #818cf8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+.catch-hint { text-align: center; color: #a78bfa; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
 
-.footer { text-align: center; margin-top: 1rem; font-size: 0.7rem; color: #333; letter-spacing: 0.06em; }
+.footer { text-align: center; margin-top: 0.6rem; font-size: 0.62rem; color: #2a2a30; letter-spacing: 0.06em; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -145,6 +197,7 @@ def init_state():
         "pending_catch": None,
         "catch_options": None,
         "input_error": False,
+        "show_scorecard": False,
         "stats": {"player":{"runs":0,"balls":0,"outs":0,"balls_bowled":0,"runs_conceded":0,"catches":0,"runouts":0,"stumpings":0,"bowled":0},
                   "CricBot":{"runs":0,"balls":0,"outs":0,"balls_bowled":0,"runs_conceded":0,"catches":0,"runouts":0,"stumpings":0,"bowled":0}},
     }
@@ -365,46 +418,77 @@ elif s.phase in ("innings1", "innings2"):
     batter = who_is_batting()
     bowler = who_is_bowling()
     inn_num = current_innings()
-    batter_label = s.player_name if batter == "player" else "CricBot"
-    bowler_label = s.player_name if bowler == "player" else "CricBot"
 
-    # target bar (innings 2)
+    # ── figure out what to show for the YOU / AI team blocks ───────────────
+    def team_block(who):
+        currently_batting = (batter == who)
+        if currently_batting:
+            runs, wkts, balls = s.score, s.wickets_lost, s.balls_bowled
+            sub = f"{balls//6}.{balls%6} ov"
+        elif inn_num == 2 and s.innings1_batter == who:
+            runs, wkts, balls = s.innings1_score, s.innings1_wickets, s.innings1_balls
+            sub = f"{balls//6}.{balls%6} ov"
+        else:
+            runs, wkts = None, None
+            sub = f"Target {s.target}" if s.target else "yet to bat"
+        score_txt = f"{runs}-{wkts}" if runs is not None else "--"
+        return score_txt, sub
+
+    you_score, you_sub = team_block("player")
+    ai_score, ai_sub = team_block("CricBot")
+
+    rr = (s.score / (s.balls_bowled / 6)) if s.balls_bowled else 0.0
     if s.target:
-        needed = s.target - s.score
-        st.markdown(f"<div class='banner banner-info'>🎯 Target: {s.target} &nbsp;|&nbsp; Need {needed} more from {balls_remaining()} ball{'s' if balls_remaining()!=1 else ''}</div>", unsafe_allow_html=True)
+        needed = max(s.target - s.score, 0)
+        req_rr = (needed * 6 / balls_remaining()) if balls_remaining() > 0 else 0.0
+        chip4_val, chip4_lbl = (f"{needed}", "NEED") if needed > 0 else ("WON", "STATUS")
+    else:
+        chip4_val, chip4_lbl = (str(balls_remaining()), "BALLS LEFT")
 
-    # scoreboard
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"""<div class='scoreboard'>
-            <div class='small'>Innings {inn_num} · {batter_label} batting</div>
-            <div class='big'>{s.score}/{s.wickets_lost}</div>
-            <div class='detail'>{s.balls_bowled//6}.{s.balls_bowled%6} / {s.total_overs} overs</div>
-        </div>""", unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""<div class='scoreboard'>
-            <div class='small'>Innings 1 result</div>
-            <div class='big'>{s.innings1_score}/{s.innings1_wickets}</div>
-            <div class='detail'>{s.innings1_balls//6}.{s.innings1_balls%6} / {s.total_overs} ov</div>
-        </div>""" if inn_num == 2 else f"""<div class='scoreboard'>
-            <div class='small'>Wickets remaining</div>
-            <div class='big'>{wickets_remaining()}</div>
-            <div class='detail'>{balls_remaining()} ball{'s' if balls_remaining()!=1 else ''} left</div>
-        </div>""", unsafe_allow_html=True)
+    # ── compact scoreboard card ─────────────────────────────────────────────
+    st.markdown(f"""<div class='score-card'>
+        <div class='score-main'>
+            <div class='team you'>
+                <div class='team-tag'>{s.player_name if len(s.player_name) <= 10 else 'YOU'}</div>
+                <div class='team-score'>{you_score}</div>
+                <div class='team-sub'>{you_sub}</div>
+            </div>
+            <div class='vs-pill'>VS</div>
+            <div class='team ai'>
+                <div class='team-tag'>CricBot</div>
+                <div class='team-score'>{ai_score}</div>
+                <div class='team-sub'>{ai_sub}</div>
+            </div>
+        </div>
+        <div class='score-strip'>
+            <div class='chip'><span class='cv'>{s.total_overs*6 - s.balls_bowled}</span><span class='cl'>Balls Left</span></div>
+            <div class='chip'><span class='cv'>{wickets_remaining()}</span><span class='cl'>Wkts Left</span></div>
+            <div class='chip'><span class='cv'>{rr:.2f}</span><span class='cl'>Run Rate</span></div>
+            <div class='chip hl'><span class='cv'>{chip4_val}</span><span class='cl'>{chip4_lbl}</span></div>
+        </div>
+    </div>""", unsafe_allow_html=True)
 
-    # last event banner
+    # ── slim last-ball strip (replaces the old tall banner) ────────────────
+    recent_html = "".join(f"<span class='recent-dot'>{n}</span>" for n in s.batter_history[-6:])
     if s.last_msg:
-        css = {"out":"banner-out","runs":"banner-runs","survived":"banner-dot","dot":"banner-dot"}.get(s.last_event, "banner-info")
-        st.markdown(f"<div class='banner {css}'>{s.last_msg}</div>", unsafe_allow_html=True)
+        cls = {"out":"out","runs":"runs","survived":"dot","dot":"dot"}.get(s.last_event, "info")
+        pill_txt = {"out":"OUT","runs":"RUNS","survived":"SAFE","dot":"DOT"}.get(s.last_event, "•")
+        st.markdown(f"""<div class='ball-strip'>
+            <span class='ball-pill {cls}'>{pill_txt}</span>
+            <span class='ball-text'>{s.last_msg}</span>
+            <span class='recent-strip'>{recent_html}</span>
+        </div>""", unsafe_allow_html=True)
     else:
         role = "batting" if batter == "player" else "bowling"
-        st.markdown(f"<div class='banner banner-info'>You are {role} — enter a number 0–6</div>", unsafe_allow_html=True)
-
-    st.markdown('<hr class="divider">', unsafe_allow_html=True)
+        st.markdown(f"""<div class='ball-strip'>
+            <span class='ball-pill info'>GO</span>
+            <span class='ball-text'>You're {role} — pick a number 0–6</span>
+            <span class='recent-strip'>{recent_html}</span>
+        </div>""", unsafe_allow_html=True)
 
     if s.pending_catch:
         # ── CATCH MINI-GAME ──────────────────────────────────────────────────
-        st.markdown("<p class='catch-hint'>🏐 Catch chance! Pick a number — match the fielder's pick and it's OUT</p>", unsafe_allow_html=True)
+        st.markdown("<p class='catch-hint'>🏐 Catch chance! Match the fielder's pick to get the wicket</p>", unsafe_allow_html=True)
         cols = st.columns(3)
         for i, opt in enumerate(s.catch_options):
             with cols[i]:
@@ -412,22 +496,44 @@ elif s.phase in ("innings1", "innings2"):
                     resolve_catch(opt)
                     st.rerun()
     else:
-        # ── TYPE YOUR NUMBER ──────────────────────────────────────────────────
+        # ── SHOT / BOWLING PAD ───────────────────────────────────────────────
         label = "Your batting shot" if batter == "player" else "Your bowling number"
-        st.markdown(f"<p style='text-align:center;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;'>{label}</p>", unsafe_allow_html=True)
-        rows=[[1,2,3],[4,5,6]]
-        for r,row in enumerate(rows):
-            cols=st.columns(3,gap="small")
-            for c,n in enumerate(row):
+        st.markdown(f"<p class='pad-label'>{label}</p>", unsafe_allow_html=True)
+        rows = [[1, 2, 3], [4, 5, 6]]
+        for row in rows:
+            cols = st.columns(3, gap="small")
+            for c, n in enumerate(row):
                 with cols[c]:
                     if st.button(str(n), key=f"num_{s.balls_bowled}_{n}", use_container_width=True):
                         process_ball(n); st.rerun()
-        left,mid,right=st.columns([1,2,1])
-        with mid:
-            if st.button("0", key=f"num_{s.balls_bowled}_0", use_container_width=True):
-                process_ball(0); st.rerun()
+        if st.button("0", key=f"num_{s.balls_bowled}_0", use_container_width=True):
+            process_ball(0); st.rerun()
 
-            st.markdown("<p class='input-error'>⚠️ Please enter a valid number between 0 and 6.</p>", unsafe_allow_html=True)
+    st.markdown('<hr class="divider-tight">', unsafe_allow_html=True)
+    st.markdown('<div class="controls-row">', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3, gap="small")
+    with c1:
+        if st.button("🔁 New", use_container_width=True):
+            reset(); st.rerun()
+    with c2:
+        if st.button("📊 Scorecard", use_container_width=True):
+            s.show_scorecard = not s.show_scorecard
+            st.rerun()
+    with c3:
+        if st.button("🔄 Refresh", use_container_width=True):
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if s.show_scorecard:
+        p = s.stats["player"]; c = s.stats["CricBot"]
+        p_sr = f"{p['runs']/p['balls']*100:.0f}" if p['balls'] else "—"
+        c_sr = f"{c['runs']/c['balls']*100:.0f}" if c['balls'] else "—"
+        st.markdown(f"""<div class='stat-row'>
+            <div class='stat-box'><div class='sl'>Your Runs</div><div class='sv' style='color:#4ade80'>{p['runs']}</div></div>
+            <div class='stat-box'><div class='sl'>Strike Rate</div><div class='sv'>{p_sr}</div></div>
+            <div class='stat-box'><div class='sl'>Bot Runs</div><div class='sv' style='color:#60a5fa'>{c['runs']}</div></div>
+            <div class='stat-box'><div class='sl'>Strike Rate</div><div class='sv'>{c_sr}</div></div>
+        </div>""", unsafe_allow_html=True)
 
 # ── RESULT ────────────────────────────────────────────────────────────────────
 elif s.phase == "result":
